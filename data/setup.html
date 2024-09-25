@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Device Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            margin-top: 50%;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+
+        img {
+            display: block;
+            margin: 0 auto 20px auto;
+            width: 50%;
+            height: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class='container'>
+        <h1>Device Setup</h1>
+        <img src='logo' alt='Device Logo'>
+
+        <div class='form-group'>
+            <label for='static_ip'>Static IP</label>
+            <input type='text' id='static_ip' placeholder='192.168.1.50'>
+        </div>
+
+        <div class='form-group'>
+            <label for='subnet'>Subnet</label>
+            <input type='text' id='subnet' placeholder='255.255.255.0'>
+        </div>
+
+        <div class='form-group'>
+            <label for='gateway'>Gateway</label>
+            <input type='text' id='gateway' placeholder='192.168.1.1'>
+        </div>
+
+        <div class='form-group'>
+            <label for='udp_server_address'>UDP Server Address</label>
+            <input type='text' id='udp_server_address' placeholder='192.168.1.100'>
+        </div>
+
+        <div class='form-group'>
+            <label for='udp_server_port'>UDP Server Port</label>
+            <input type='text' id='udp_server_port' placeholder='8080'>
+        </div>
+
+        <div class='form-group'>
+            <label for='max_udp_buffer'>Max UDP Buffer</label>
+            <input type='text' id='max_udp_buffer' placeholder='1024'>
+        </div>
+
+        <div class='form-group'>
+            <label for='SSID_client'>WiFi SSID</label>
+            <input type='text' id='SSID_client' placeholder='MyWiFiNetwork'>
+        </div>
+
+        <div class='form-group'>
+            <label for='password_client'>WiFi Password</label>
+            <input type='text' id='password_client' placeholder='MyWiFiPassword'>
+        </div>
+
+        <div class='form-group'>
+            <label for='device_name'>Device Name</label>
+            <input type='text' id='device_name' placeholder='ESP32_Device_01'>
+        </div>
+
+        <div class='form-group'>
+            <label for='wifi_manager_pw'>WiFi Manager Password</label>
+            <input type='text' id='wifi_manager_pw' placeholder='admin11189'>
+        </div>
+        <div class='form-group'>
+            <button type='button' onclick='syncData()'>Synchronize Config</button>
+        </div>
+        <div class='form-group'>
+            <button type='button' onclick='sendJSON()'>Save Config</button>
+        </div>
+
+    </div>
+
+    </div>
+
+    <script>
+        // function sendJSON() {
+        //     const jsonData = {
+        //         'static_IP': document.getElementById('static_ip').value,
+        //         'subnet': document.getElementById('subnet').value,
+        //         'gateway': document.getElementById('gateway').value,
+        //         'udp_server_address': document.getElementById('udp_server_address').value,
+        //         'udp_server_port': document.getElementById('udp_server_port').value,
+        //         'max_udp_buffer': document.getElementById('max_udp_buffer').value,
+        //         'SSID_client': document.getElementById('SSID_client').value,
+        //         'password_client': document.getElementById('password_client').value,
+        //         'device_name': document.getElementById('device_name').value,
+        //         'wifi_manager_password': document.getElementById('wifi_manager_pw').value
+        //     };
+
+        //     // Make HTTP POST request
+        //     fetch('http://192.168.4.1/update_setup', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json'
+        //         },
+        //         body: JSON.stringify(jsonData)
+        //     })
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             console.log('Success:', data);
+        //             alert('Data sent successfully!');
+        //         })
+        //         .catch((error) => {
+        //             console.error('Error:', error);
+        //             alert('Failed to send data');
+        //         });
+        // }
+        function sendJSON() {
+            const jsonData = {
+                'static_IP': document.getElementById('static_ip').value,
+                'subnet': document.getElementById('subnet').value,
+                'gateway': document.getElementById('gateway').value,
+                'udp_server_address': document.getElementById('udp_server_address').value,
+                'udp_server_port': document.getElementById('udp_server_port').value,
+                'max_udp_buffer': document.getElementById('max_udp_buffer').value,
+                'SSID_client': document.getElementById('SSID_client').value,
+                'password_client': document.getElementById('password_client').value,
+                'device_name': document.getElementById('device_name').value,
+                'wifi_manager_password': document.getElementById('wifi_manager_pw').value
+            };
+
+            // Make HTTP POST request
+            fetch('http://192.168.4.1/update_setup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    // Show the response message in an alert
+                    alert(`New setup are: ${JSON.stringify(data.data)}`);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('Failed to send data');
+                });
+        }
+
+
+        function syncData() {
+            // Make HTTP GET request
+            fetch('http://192.168.4.1/sync_setup', {
+                method: 'GET'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    alert('Data Sync successfully!');
+
+                    // Update the input fields with received data
+                    document.getElementById('static_ip').value = `${data.static_ip_1}.${data.static_ip_2}.${data.static_ip_3}.${data.static_ip_4}`;
+                    document.getElementById('subnet').value = `${data.subnet_1}.${data.subnet_2}.${data.subnet_3}.${data.subnet_4}`;
+                    document.getElementById('gateway').value = `${data.gateway_1}.${data.gateway_2}.${data.gateway_3}.${data.gateway_4}`;
+                    document.getElementById('udp_server_address').value = data.udp_ip_address;
+                    document.getElementById('udp_server_port').value = data.udp_port;
+                    document.getElementById('max_udp_buffer').value = data.max_udp_buffer;
+                    document.getElementById('SSID_client').value = data.SSID_client;
+                    document.getElementById('password_client').value = data.password;
+                    document.getElementById('device_name').value = data.name;
+                    document.getElementById('wifi_manager_pw').value = data.wifi_manager_password; // Assuming wifi manager password is the same as the received password
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('Failed to sync data');
+                });
+        }
+    </script>
+
+</body>
+
+</html>

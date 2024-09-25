@@ -1,0 +1,22 @@
+{
+    "sn": "ABMI-WLBSCAN-0924-01",
+    "name": "WS1",
+    "password": "123456789",
+    "SSID_client": "myrouter",
+    "wifi_manager_password": "123456789",
+    "static_ip_1": "192",
+    "static_ip_2": "168",
+    "static_ip_3": "15",
+    "static_ip_4": "100",
+    "gateway_1": "192",
+    "gateway_2": "168",
+    "gateway_3": "15",
+    "gateway_4": "1",
+    "subnet_1": "255",
+    "subnet_2": "255",
+    "subnet_3": "0",
+    "subnet_4": "0",
+    "udp_ip_address": "192.168.15.98",
+    "udp_port": "1234",
+    "max_udp_buffer": "48"
+}
