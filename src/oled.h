@@ -15,6 +15,8 @@
 TwoWire I2Cone = TwoWire(0);
 TwoWire I2Ctwo = TwoWire(1);
 
+uint8_t last_message = 0;
+
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &I2Cone);
 
 unsigned int sortAndReturnBiggest(unsigned int array[])
@@ -43,7 +45,7 @@ String adjust_text_to_screen(String text)
 {
     uint16_t text_len = text.length();
     uint16_t text_capacity = SCREEN_WIDTH / (6 * FONT_SIZE);
-    uint16_t delta_size = (text_capacity - (text_len % text_capacity)) + text_capacity;
+    uint16_t delta_size = (text_capacity - (text_len % text_capacity)) + (text_capacity / 2);
     String tmp = text;
     Serial.print("Capacity:");
     Serial.println(text_capacity);
@@ -84,39 +86,57 @@ void running_text(byte y, String text1, String text2, String text3, uint32_t spe
     Serial.print("t3:");
     Serial.println(text3.length());
 
-    for (uint16_t i = 0; i < text1.length() * 6 * FONT_SIZE; i++)
+    for (uint16_t i = 0; i < text1.length(); i++)
     {
-        display.setTextColor(WHITE, BLACK);
-        display.setCursor(SCREEN_WIDTH - i, y);
-        for (uint16_t j = 0; j < i / (6 * FONT_SIZE); j++)
+        if (last_message != message_info_index)
+        {
+            last_message = message_info_index;
+            display.clearDisplay();
+            break;
+        }
+
+        if (reset_cnt >= 10)
+        {
+            break;
+        }
+        if (wakeup == 1)
+        {
+            display.setTextColor(WHITE, BLACK);
+        }
+        else
+        {
+            display.setTextColor(BLACK, BLACK);
+        }
+        display.setCursor(SCREEN_WIDTH - i * 6 * FONT_SIZE, y);
+        for (uint16_t j = 0; j < i; j++)
         {
             display.print(text1[j]);
         }
-        display.setCursor(SCREEN_WIDTH - i, y + 16);
-        for (uint16_t j = 0; j < i / (6 * FONT_SIZE); j++)
+        display.setCursor(SCREEN_WIDTH - i * 6 * FONT_SIZE, y + 16);
+        for (uint16_t j = 0; j < i; j++)
         {
             display.print(text2[j]);
         }
-        display.setCursor(SCREEN_WIDTH - i, y + 32);
-        for (uint16_t j = 0; j < i / (6 * FONT_SIZE); j++)
+        display.setCursor(SCREEN_WIDTH - i * 6 * FONT_SIZE, y + 32);
+        for (uint16_t j = 0; j < i; j++)
         {
             display.print(text3[j]);
         }
         display.display();
         vTaskDelay((200 - (speed * 2)) / portTICK_PERIOD_MS);
         display.setTextColor(BLACK, BLACK);
-        display.setCursor(SCREEN_WIDTH - i, y);
-        for (uint16_t j = 0; j < i / (6 * FONT_SIZE); j++)
+        display.setCursor(SCREEN_WIDTH - i * 6 * FONT_SIZE, y);
+        for (uint16_t j = 0; j < i; j++)
         {
             display.print(text1[j]);
         }
-        display.setCursor(SCREEN_WIDTH - i, y + 16);
-        for (uint16_t j = 0; j < i / (6 * FONT_SIZE); j++)
+        display.setCursor(SCREEN_WIDTH - i * 6 * FONT_SIZE, y + 16);
+        for (uint16_t j = 0; j < i; j++)
         {
             display.print(text2[j]);
         }
-        display.setCursor(SCREEN_WIDTH - i, y + 32);
-        for (uint16_t j = 0; j < i / (6 * FONT_SIZE); j++)
+        display.setCursor(SCREEN_WIDTH - i * 6 * FONT_SIZE, y + 32);
+        for (uint16_t j = 0; j < i; j++)
         {
             display.print(text3[j]);
         }
@@ -126,48 +146,17 @@ void running_text(byte y, String text1, String text2, String text3, uint32_t spe
 
 void draw_header(byte x, byte y, String text)
 {
-    Serial.println("headprepare");
+    if (wakeup == 1)
+    {
+        display.setTextColor(WHITE, BLACK);
+    }
+    else
+    {
+        display.setTextColor(BLACK, BLACK);
+    }
     display.setCursor(x, y);
     display.print(text);
     display.display();
-    Serial.println("headfinish");
-}
-void scroll_text(byte y, String text1, uint32_t speed)
-{
-    /*
-    Cari lebar layar
-    cari kapasitas text layar
-    buat panjang ukuran text menjadi seukuran layar
-    agar dapat discroll sampai habis dengan cara menambhakan dengan "spasi"
-    sebanyak sisa kapasitas text pada layar
-    */
-    uint16_t text_len = text1.length();
-    uint16_t text_capacity = SCREEN_WIDTH / (6 * FONT_SIZE);
-    uint16_t delta_size = text_capacity - (text_capacity % text_len);
-    for (uint16_t i = 0; i < delta_size; i++)
-    {
-        text1 += " ";
-    }
-
-    // scroll text
-    for (uint16_t i = 0; i < text1.length(); i += 2)
-    {
-        display.setCursor(SCREEN_WIDTH - (0 + (i * 6 * FONT_SIZE)), y);
-        display.setTextColor(WHITE, BLACK);
-        for (uint16_t j = 0; j < i; j++)
-        {
-            display.print(text1[j]);
-        }
-        display.display();
-        vTaskDelay((200 - (speed * 2)) / portTICK_PERIOD_MS);
-        display.setCursor(SCREEN_WIDTH - (0 + (i * 6 * FONT_SIZE)), y);
-        display.setTextColor(BLACK, BLACK);
-        for (uint16_t j = 0; j < i; j++)
-        {
-            display.print(text1[j]);
-        }
-        display.display();
-    }
 }
 
 void i2cScan(TwoWire &i2cBus)
@@ -210,8 +199,8 @@ void i2cScan(TwoWire &i2cBus)
 
 void display_oled_loop(void *param)
 {
-    I2Cone.begin(SCL_1, SDA_1);
-    I2Ctwo.begin(SDA_2, SCL_2);
+    I2Cone.begin(SCL_1, SDA_1, 400000);
+    I2Ctwo.begin(SDA_2, SCL_2, 400000);
     vTaskDelay(500 / portTICK_PERIOD_MS);
     if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3c))
     {
@@ -221,34 +210,140 @@ void display_oled_loop(void *param)
     display.clearDisplay();
     display.setTextSize(FONT_SIZE);
     display.setTextColor(WHITE);
-    uint8_t last_message = 0;
+
+    display.clearDisplay();
+    // Display the bitmap image on the OLED screen
+    display.drawBitmap(0, 0, logo_oled, SCREEN_WIDTH, SCREEN_HEIGHT, SSD1306_WHITE);
+    // Show the buffer on the display
+    display.display();
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+    display.clearDisplay();
+
     while (1)
     {
-        if (last_message != message_info_index)
+        if (millis() - timer_wakeup > SCREEN_WAKEUP_TIMEOUT_MS)
+        {
+            wakeup = 0;
+        }
+        if (last_message != message_info_index && message_info_index != MENU_GOING_RESET)
         {
             last_message = message_info_index;
             display.clearDisplay();
         }
 
         String saved_config = get_last_setup();
-        draw_header(10, 0, "UDP:");
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-        running_text(16, "ADDR:" + get_value(saved_config, "udp_ip_address"), "PORT:" + get_value(saved_config, "udp_port"), "", 95);
-        // switch (message_info_index)
-        // {
-        // case 0:
-        //     draw_header(10, 0, "SCANNER:");
-        //     running_text(0, keyboardBuffer, 60);
-        //     break;
-        // case 1:
-        //     draw_header(10, 0, "UDP:");
-        //     running_text(14, "ADDR:" + get_value(saved_config, "udp_ip_address") + "\nPORT:" + get_value(saved_config, "udp_port"), 60);
-        //     break;
-        // default:
-        //     draw_header(10, 0, "SCANNER:");
-        //     running_text(0, keyboardBuffer, 60);
-        //     break;
-        // }
+
+        switch (message_info_index)
+        {
+        case MENU_SCANNER:
+            draw_header(0, 0, "SCANNER");
+            running_text(16,
+                         "READING:" + keyboardBuffer,
+                         "LAST SEND:" + last_send_scanned,
+                         "",
+                         70);
+            break;
+        case MENU_UDP:
+            if (EEPROM.read(0) == 1)
+            {
+                draw_header(0, 0, "UDP SERVER");
+            }
+            else
+            {
+                draw_header(0, 0, "TCP SERVER");
+            }
+            running_text(16,
+                         "ADDR:" + get_value(saved_config, "udp_ip_address"),
+                         "PORT:" + get_value(saved_config, "udp_port"),
+                         "",
+                         70);
+            break;
+        case MENU_WIFI_HOTSPOT:
+            draw_header(0, 0, "WiFi(AP)");
+            running_text(16,
+                         "SSID:" + get_value(saved_config, "sn") + "-" + get_value(saved_config, "name"),
+                         "PASS:" + get_value(saved_config, "wifi_manager_password"),
+                         "",
+                         70);
+            break;
+        case MENU_WIFI_CLIENT:
+            draw_header(0, 0, "WiFi(CLI)");
+            running_text(16,
+                         "SSID:" + get_value(saved_config, "SSID_client"),
+                         "PASS:" + get_value(saved_config, "password"),
+                         "",
+                         70);
+            break;
+        case MENU_DEVICE_IP:
+            Serial.println(WiFi.localIP().toString());
+            draw_header(0, 0, "IP ADDRESS");
+            if (EEPROM.read(0) == 1)
+            {
+                running_text(16,
+                             WiFi.localIP().toString(),
+                             "MODE : UDP",
+                             "",
+                             70);
+            }
+            else
+            {
+                running_text(16,
+                             WiFi.localIP().toString(),
+                             "MODE : TCP",
+                             "",
+                             70);
+            }
+            break;
+        case MENU_GOING_RESET:
+            if (wakeup == 1)
+            {
+                display.setTextColor(WHITE, BLACK);
+            }
+            else
+            {
+                display.setTextColor(BLACK, BLACK);
+            }
+            display.setCursor(0, 0);
+            display.print("RESET!!");
+            display.setCursor(0, 16);
+            display.print("HOLD...");
+            display.setCursor(0, 32);
+
+            display.setTextColor(BLACK, BLACK);
+            display.setCursor(48, 48);
+            display.print("    ");
+            display.display();
+
+            if (wakeup == 1)
+            {
+                display.setTextColor(WHITE, BLACK);
+            }
+            else
+            {
+                display.setTextColor(BLACK, BLACK);
+            }
+            display.setCursor(48, 48);
+            display.print(String(reset_cnt) + "%");
+
+            for (uint8_t i = 0; i < map(reset_cnt, 0, 100, 0, 128); i++)
+            {
+                if (i <= 35 || i > 88)
+                {
+                    display.setCursor(i, 48);
+                    display.print("=");
+                }
+            }
+            display.display();
+            break;
+        default:
+            draw_header(0, 0, "SCANNER");
+            running_text(16,
+                         "READING:" + keyboardBuffer,
+                         "LAST SEND:" + last_send_scanned,
+                         "",
+                         70);
+            break;
+        }
     }
 }
 #endif

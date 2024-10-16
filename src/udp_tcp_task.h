@@ -2,6 +2,7 @@
 #define udp_tcp_task_h
 
 #include "global.h"
+#include "logo_oled.h"
 
 String config = get_last_setup();
 String router_ssid = get_value(config, "SSID_client");
@@ -73,6 +74,7 @@ void UDP_client(void *param)
             udp.write(buffer_kirim, keyboardBuffer.length());
             udp.endPacket();
             Serial.println(keyboardBuffer);
+            last_send_scanned = keyboardBuffer;
             keyboardBuffer = ""; // reset keyboard buffer
             ready_to_send = 0;   // reset buffer ready status
         }

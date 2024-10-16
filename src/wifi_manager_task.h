@@ -87,6 +87,10 @@ void setSetupHandler()
     const char *password_client = doc["password_client"];
     const char *device_name = doc["device_name"];
     const char *wifi_manager_password = doc["wifi_manager_password"];
+    const char *conn_mode_setup = doc["conn_type"];
+
+    EEPROM.write(0, (uint8_t)(String(conn_mode_setup).toInt()));
+    EEPROM.commit();
 
     String last_config = get_last_setup();
     String last_SN = get_value(last_config, "sn");
